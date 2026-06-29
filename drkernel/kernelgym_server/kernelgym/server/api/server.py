@@ -347,7 +347,12 @@ async def _execute_workflow(
     except KeyError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
-    result = await controller.handle_request(payload, scheduler)
+    try:
+        result = await controller.handle_request(payload, scheduler)
+    except Exception as exc:
+        # Mark the task FAILED in Redis before propagating. 
+        await task_mgr.fail_task(task_id, str(exc))
+        raise
     if isinstance(result, dict):
         result.setdefault("task_id", task_id)
     await task_mgr.complete_task(task_id, result)
@@ -816,16 +821,16 @@ async def worker_heartbeat(
                     reg["node_id"] = node_id
                 if not reg.get("hostname") and hostname:
                     reg["hostname"] = hostname
-                # 如果设备不一致，拒绝心跳
+                # 设备不一致：记录告警但不拒绝心跳，保持既有运行行为，避免误踢 worker。
                 if device and reg.get("device") and reg.get("device") != device:
                     logger.warning(
-                        f"Heartbeat refused: device mismatch for {worker_id}, reg={reg.get('device')} req={device}"
+                        f"Heartbeat device mismatch for {worker_id}, reg={reg.get('device')} req={device}; "
+                        f"tolerating (heartbeat not refused)."
                     )
-                    raise HTTPException(
-                        status_code=status.HTTP_409_CONFLICT, detail="Device mismatch; please re-register"
-                    )
-        except Exception:
-            pass
+        except Exception as exc:
+            # Keep registry-consistency bookkeeping non-fatal to the heartbeat, but
+            # surface the failure instead of swallowing it silently.
+            logger.warning(f"Heartbeat consistency check failed for {worker_id}: {exc}")
 
         # Update heartbeat in load balancer（仅当注册信息一致且未冲突时）
         await task_manager.worker_load_balancer.update_worker_heartbeat(worker_id)

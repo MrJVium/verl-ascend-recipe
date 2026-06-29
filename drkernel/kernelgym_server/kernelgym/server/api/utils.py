@@ -53,7 +53,9 @@ async def get_gpu_info() -> dict[str, Any]:
 
 async def get_system_health() -> dict[str, Any]:
     try:
-        cpu_percent = psutil.cpu_percent(interval=1)
+        # interval=None is non-blocking (samples since the previous call); a
+        # positive interval would block the FastAPI event loop for that many seconds.
+        cpu_percent = psutil.cpu_percent(interval=None)
         memory = psutil.virtual_memory()
 
         gpu_status = await get_gpu_info()
@@ -87,7 +89,9 @@ async def get_system_health() -> dict[str, Any]:
 
 async def get_system_metrics() -> dict[str, Any]:
     try:
-        cpu_percent = psutil.cpu_percent(interval=1)
+        # interval=None is non-blocking (samples since the previous call); a
+        # positive interval would block the FastAPI event loop for that many seconds.
+        cpu_percent = psutil.cpu_percent(interval=None)
         memory = psutil.virtual_memory()
 
         gpu_info = await get_gpu_info()
