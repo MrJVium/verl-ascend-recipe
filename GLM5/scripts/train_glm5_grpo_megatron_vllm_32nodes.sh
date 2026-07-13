@@ -168,6 +168,8 @@ REF_CONFIG=(
 )
 
 ROLLOUT_CONFIG=(
+    actor_rollout_ref.rollout.name=vllm
+    actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1
     actor_rollout_ref.rollout.tensor_model_parallel_size=$gen_tp
     actor_rollout_ref.rollout.data_parallel_size=$gen_dp
     actor_rollout_ref.rollout.expert_parallel_size=$gen_ep
