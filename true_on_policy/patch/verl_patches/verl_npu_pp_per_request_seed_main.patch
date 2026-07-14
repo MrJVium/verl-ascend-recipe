@@ -1,8 +1,8 @@
 diff --git a/docs/index.rst b/docs/index.rst
-index 72ffd4cc..4a7a2130 100644
+index 6b6f9acb7013ee8534fd3080375cb913e3cd271c..2d84ca12d03669db2383678dfe0750964ef7ef69 100644
 --- a/docs/index.rst
 +++ b/docs/index.rst
-@@ -149,6 +149,7 @@ verl is fast with:
+@@ -150,6 +150,7 @@ verl is fast with:
     advance/skip_manager.rst
     advance/agent_loop
     advance/reward_loop
@@ -11,7 +11,7 @@ index 72ffd4cc..4a7a2130 100644
     advance/grafana_prometheus.md
     advance/mtp.md
 diff --git a/verl/experimental/agent_loop/agent_loop.py b/verl/experimental/agent_loop/agent_loop.py
-index 9b618f89..26052c9a 100644
+index 1bd98610dbb5f668d697dbc9c0563c752410e72b..b7d0d5250f2a479ba5a94a0131dd1700d059fe9f 100644
 --- a/verl/experimental/agent_loop/agent_loop.py
 +++ b/verl/experimental/agent_loop/agent_loop.py
 @@ -71,6 +71,7 @@ from verl.workers.config import (
@@ -22,7 +22,7 @@ index 9b618f89..26052c9a 100644
  
  logger = logging.getLogger(__file__)
  logger.setLevel(os.getenv("VERL_LOGGING_LEVEL", "WARN"))
-@@ -640,9 +641,18 @@ class AgentLoopWorker:
+@@ -646,9 +647,18 @@ class AgentLoopWorker:
              sample_sampling_params = dict(sampling_params)
              if not validate and per_sample_do_sample is not None and not bool(per_sample_do_sample[i]):
                  apply_greedy_sampling_params(sample_sampling_params)
@@ -43,7 +43,7 @@ index 9b618f89..26052c9a 100644
              )
          outputs = await asyncio.gather(*tasks)
 diff --git a/verl/trainer/config/rollout/rollout.yaml b/verl/trainer/config/rollout/rollout.yaml
-index e7373ef7..fc5a7c96 100644
+index e7373ef780e31bc16c8f0884bf7ee4e629133628..fc5a7c96f3ec1591c44c0344a73295640dfe337b 100644
 --- a/verl/trainer/config/rollout/rollout.yaml
 +++ b/verl/trainer/config/rollout/rollout.yaml
 @@ -30,6 +30,13 @@ full_determinism: false
@@ -61,7 +61,7 @@ index e7373ef7..fc5a7c96 100644
  # same as data.max_prompt_length if it exists
  prompt_length: ${oc.select:data.max_prompt_length,512}
 diff --git a/verl/trainer/ppo/v1/agent_loop_tq.py b/verl/trainer/ppo/v1/agent_loop_tq.py
-index 5e147eef..f4a40422 100644
+index 5e147eef223f65e9ca72f86d11a933af44daa00c..f4a40422aafcd0aba82a9736d41bb84409232ed3 100644
 --- a/verl/trainer/ppo/v1/agent_loop_tq.py
 +++ b/verl/trainer/ppo/v1/agent_loop_tq.py
 @@ -33,6 +33,7 @@ from verl.experimental.agent_loop import (
@@ -98,11 +98,11 @@ index 5e147eef..f4a40422 100644
                  )
                  tasks.append(task)
 diff --git a/verl/workers/config/rollout.py b/verl/workers/config/rollout.py
-index ab0e5d3f..77b998e1 100644
+index 19cf7f5e322909a108a98d501f817f556af88de0..6ad82e7e54e43db4c478adb3d01aaa0daaf0f055 100644
 --- a/verl/workers/config/rollout.py
 +++ b/verl/workers/config/rollout.py
 @@ -18,6 +18,7 @@ from typing import Optional
- from omegaconf import MISSING
+ from omegaconf import MISSING, DictConfig, OmegaConf
  
  from verl.base_config import BaseConfig
 +from verl.utils.device import is_torch_npu_available
@@ -164,9 +164,9 @@ index ab0e5d3f..77b998e1 100644
                  raise NotImplementedError(
                      f"Current rollout {self.name=} not implemented pipeline_model_parallel_size > 1 yet."
                  )
-@@ -342,3 +374,60 @@ class RolloutConfig(BaseConfig):
-                 f"rollout.disaggregation.enabled=True is currently only supported with "
-                 f"rollout.name='sglang'; got {self.name!r}. (vLLM PD is a tracked follow-up.)"
+@@ -339,3 +371,60 @@ class RolloutConfig(BaseConfig):
+             raise ValueError(
+                 f"rollout.disaggregation.enabled=True requires rollout.name in ('sglang', 'vllm'); got {self.name!r}."
              )
 +
 +
@@ -226,7 +226,7 @@ index ab0e5d3f..77b998e1 100644
 +        * rollout_config.pipeline_model_parallel_size
 +    )
 diff --git a/verl/workers/rollout/llm_server.py b/verl/workers/rollout/llm_server.py
-index d4914039..97d39067 100644
+index d4914039e054557613e75c1f34fe785106563075..97d390670846526e777ba7f62c56d71af7cbd48c 100644
 --- a/verl/workers/rollout/llm_server.py
 +++ b/verl/workers/rollout/llm_server.py
 @@ -31,8 +31,10 @@ from omegaconf import DictConfig
@@ -328,7 +328,7 @@ index d4914039..97d39067 100644
          self.rollout_replicas = [
              self.rollout_replica_class(
 diff --git a/verl/workers/rollout/replica.py b/verl/workers/rollout/replica.py
-index 10e231ec..aef4ee75 100644
+index c01cdd79126ffa51ddcb42cdc3ff6529d5c6ecbe..70adbd90b887e6e1d860209fe27d040115ba28ad 100644
 --- a/verl/workers/rollout/replica.py
 +++ b/verl/workers/rollout/replica.py
 @@ -27,6 +27,7 @@ from verl.single_controller.ray import RayClassWithInitArgs, RayResourcePool, Ra
@@ -352,7 +352,7 @@ index 10e231ec..aef4ee75 100644
  
          self.world_size = (
 diff --git a/verl/workers/rollout/utils.py b/verl/workers/rollout/utils.py
-index 28d426dd..5f7db040 100644
+index 28d426dda165ac8597d0f3d452496fffd63bba14..5f7db040f36384fc3bba7340e4d4b5ba2a941525 100644
 --- a/verl/workers/rollout/utils.py
 +++ b/verl/workers/rollout/utils.py
 @@ -12,8 +12,10 @@
@@ -437,10 +437,10 @@ index 28d426dd..5f7db040 100644
  def get_max_position_embeddings(hf_config) -> int:
      max_len = getattr(hf_config, "max_position_embeddings", None)
 diff --git a/verl/workers/rollout/vllm_rollout/vllm_async_server.py b/verl/workers/rollout/vllm_rollout/vllm_async_server.py
-index 8b33a6fc..0097fad2 100644
+index 1a4def4fd8cce9abdfc00b5212aff7a70d645ea6..c19293ad16ea9c8d0615d0a59e6ef3454a1cf34c 100644
 --- a/verl/workers/rollout/vllm_rollout/vllm_async_server.py
 +++ b/verl/workers/rollout/vllm_rollout/vllm_async_server.py
-@@ -42,6 +42,7 @@ from verl.utils.profiler import DistProfiler, build_vllm_profiler_args
+@@ -43,6 +43,7 @@ from verl.utils.profiler import DistProfiler, build_vllm_profiler_args
  from verl.utils.tokenizer import normalize_token_ids
  from verl.utils.vllm.vllm_fp8_utils import apply_vllm_fp8_patches
  from verl.workers.config import HFModelConfig, RolloutConfig
@@ -448,7 +448,7 @@ index 8b33a6fc..0097fad2 100644
  from verl.workers.rollout.replica import RolloutMode, RolloutReplica, TokenOutput
  from verl.workers.rollout.utils import get_max_position_embeddings, qwen2_5_vl_dedup_image_tokens, run_uvicorn
  from verl.workers.rollout.vllm_rollout.utils import (
-@@ -316,14 +317,29 @@ class vLLMHttpServer:
+@@ -349,14 +350,29 @@ class vLLMHttpServer:
              )
  
          if self.config.data_parallel_size > 1:
@@ -486,7 +486,7 @@ index 8b33a6fc..0097fad2 100644
              dp_args = {
                  "data_parallel_size": self.config.data_parallel_size,
                  "data_parallel_size_local": data_parallel_size_local,
-@@ -517,7 +533,7 @@ class vLLMHttpServer:
+@@ -583,6 +599,6 @@ class vLLMHttpServer:
          sampling_params["logprobs"] = 0 if sampling_params.pop("logprobs", False) else None
          sampling_params.setdefault("repetition_penalty", self.config.get("repetition_penalty", 1.0))
          sampling_params.setdefault("ignore_eos", self.config.get("ignore_eos", False))
@@ -494,8 +494,7 @@ index 8b33a6fc..0097fad2 100644
 +        # full_determinism supplies a fallback seed; per_request_seed may set one upstream.
          if self.config.full_determinism:
              sampling_params.setdefault("seed", self.replica_rank + self.config.seed)
-         sampling_params = SamplingParams(max_tokens=max_tokens, **sampling_params)
-@@ -835,6 +851,8 @@ class vLLMHttpServer:
+@@ -983,6 +999,8 @@ class vLLMHttpServer:
  
      def _init_config(self, config):
          """Initialise config. Override when a specific dataclass_type is needed."""

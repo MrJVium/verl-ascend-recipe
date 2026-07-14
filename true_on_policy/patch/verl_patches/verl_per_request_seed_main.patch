@@ -1,6 +1,6 @@
 diff --git a/docs/advance/per_request_seed.md b/docs/advance/per_request_seed.md
 new file mode 100644
-index 00000000..47f7a3ad
+index 0000000000000000000000000000000000000000..47f7a3ada1af45b04e9c16ffcf054517c78929eb
 --- /dev/null
 +++ b/docs/advance/per_request_seed.md
 @@ -0,0 +1,31 @@
@@ -36,10 +36,10 @@ index 00000000..47f7a3ad
 +`per_request_seed` sets `SamplingParams.seed` before the request reaches vLLM,
 +and the existing `full_determinism` fallback does not overwrite it.
 diff --git a/docs/index.rst b/docs/index.rst
-index 72ffd4cc..4a7a2130 100644
+index 6b6f9acb7013ee8534fd3080375cb913e3cd271c..2d84ca12d03669db2383678dfe0750964ef7ef69 100644
 --- a/docs/index.rst
 +++ b/docs/index.rst
-@@ -149,6 +149,7 @@ verl is fast with:
+@@ -150,6 +150,7 @@ verl is fast with:
     advance/skip_manager.rst
     advance/agent_loop
     advance/reward_loop
@@ -49,7 +49,7 @@ index 72ffd4cc..4a7a2130 100644
     advance/mtp.md
 diff --git a/examples/per_request_seed/run_grpo_qwen3_8b_fsdp.sh b/examples/per_request_seed/run_grpo_qwen3_8b_fsdp.sh
 new file mode 100644
-index 00000000..9f46c98d
+index 0000000000000000000000000000000000000000..9f46c98d44e521b9ddd4c842b3732c0c43f70be1
 --- /dev/null
 +++ b/examples/per_request_seed/run_grpo_qwen3_8b_fsdp.sh
 @@ -0,0 +1,61 @@
@@ -115,7 +115,7 @@ index 00000000..9f46c98d
 +
 +python3 -m verl.trainer.main_ppo "${HYDRA_ARGS[@]}" "$@"
 diff --git a/verl/experimental/agent_loop/agent_loop.py b/verl/experimental/agent_loop/agent_loop.py
-index 9b618f89..26052c9a 100644
+index 1bd98610dbb5f668d697dbc9c0563c752410e72b..b7d0d5250f2a479ba5a94a0131dd1700d059fe9f 100644
 --- a/verl/experimental/agent_loop/agent_loop.py
 +++ b/verl/experimental/agent_loop/agent_loop.py
 @@ -71,6 +71,7 @@ from verl.workers.config import (
@@ -126,7 +126,7 @@ index 9b618f89..26052c9a 100644
  
  logger = logging.getLogger(__file__)
  logger.setLevel(os.getenv("VERL_LOGGING_LEVEL", "WARN"))
-@@ -640,9 +641,18 @@ class AgentLoopWorker:
+@@ -646,9 +647,18 @@ class AgentLoopWorker:
              sample_sampling_params = dict(sampling_params)
              if not validate and per_sample_do_sample is not None and not bool(per_sample_do_sample[i]):
                  apply_greedy_sampling_params(sample_sampling_params)
@@ -147,7 +147,7 @@ index 9b618f89..26052c9a 100644
              )
          outputs = await asyncio.gather(*tasks)
 diff --git a/verl/trainer/config/rollout/rollout.yaml b/verl/trainer/config/rollout/rollout.yaml
-index e7373ef7..fc5a7c96 100644
+index e7373ef780e31bc16c8f0884bf7ee4e629133628..fc5a7c96f3ec1591c44c0344a73295640dfe337b 100644
 --- a/verl/trainer/config/rollout/rollout.yaml
 +++ b/verl/trainer/config/rollout/rollout.yaml
 @@ -30,6 +30,13 @@ full_determinism: false
@@ -165,7 +165,7 @@ index e7373ef7..fc5a7c96 100644
  # same as data.max_prompt_length if it exists
  prompt_length: ${oc.select:data.max_prompt_length,512}
 diff --git a/verl/trainer/ppo/v1/agent_loop_tq.py b/verl/trainer/ppo/v1/agent_loop_tq.py
-index 5e147eef..f4a40422 100644
+index 5e147eef223f65e9ca72f86d11a933af44daa00c..f4a40422aafcd0aba82a9736d41bb84409232ed3 100644
 --- a/verl/trainer/ppo/v1/agent_loop_tq.py
 +++ b/verl/trainer/ppo/v1/agent_loop_tq.py
 @@ -33,6 +33,7 @@ from verl.experimental.agent_loop import (
@@ -202,10 +202,10 @@ index 5e147eef..f4a40422 100644
                  )
                  tasks.append(task)
 diff --git a/verl/workers/config/rollout.py b/verl/workers/config/rollout.py
-index 9cd3c103..77b998e1 100644
+index 19cf7f5e322909a108a98d501f817f556af88de0..b63e8b8beda65403f969c0aaf1ce0d355e090096 100644
 --- a/verl/workers/config/rollout.py
 +++ b/verl/workers/config/rollout.py
-@@ -176,6 +176,11 @@ class RolloutConfig(BaseConfig):
+@@ -174,6 +174,11 @@ class RolloutConfig(BaseConfig):
      # enable_full_determinism() when full_determinism is True.
      seed: int = 42
  
@@ -218,7 +218,7 @@ index 9cd3c103..77b998e1 100644
      # Abort remaining requests when (1 - over_sample_rate) * total_requests are completed.
      over_sample_rate: float = 0.0
 diff --git a/verl/workers/rollout/utils.py b/verl/workers/rollout/utils.py
-index 28d426dd..5f7db040 100644
+index 28d426dda165ac8597d0f3d452496fffd63bba14..5f7db040f36384fc3bba7340e4d4b5ba2a941525 100644
 --- a/verl/workers/rollout/utils.py
 +++ b/verl/workers/rollout/utils.py
 @@ -12,8 +12,10 @@
@@ -303,10 +303,10 @@ index 28d426dd..5f7db040 100644
  def get_max_position_embeddings(hf_config) -> int:
      max_len = getattr(hf_config, "max_position_embeddings", None)
 diff --git a/verl/workers/rollout/vllm_rollout/vllm_async_server.py b/verl/workers/rollout/vllm_rollout/vllm_async_server.py
-index 17985feb..0097fad2 100644
+index 1a4def4fd8cce9abdfc00b5212aff7a70d645ea6..5cee4412ccbd71516025053a40d789eaf398a1d2 100644
 --- a/verl/workers/rollout/vllm_rollout/vllm_async_server.py
 +++ b/verl/workers/rollout/vllm_rollout/vllm_async_server.py
-@@ -533,7 +533,7 @@ class vLLMHttpServer:
+@@ -583,6 +583,6 @@ class vLLMHttpServer:
          sampling_params["logprobs"] = 0 if sampling_params.pop("logprobs", False) else None
          sampling_params.setdefault("repetition_penalty", self.config.get("repetition_penalty", 1.0))
          sampling_params.setdefault("ignore_eos", self.config.get("ignore_eos", False))
@@ -314,4 +314,3 @@ index 17985feb..0097fad2 100644
 +        # full_determinism supplies a fallback seed; per_request_seed may set one upstream.
          if self.config.full_determinism:
              sampling_params.setdefault("seed", self.replica_rank + self.config.seed)
-         sampling_params = SamplingParams(max_tokens=max_tokens, **sampling_params)
