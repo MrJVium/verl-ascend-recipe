@@ -84,7 +84,7 @@ else
   # 子节点尝试往主节点注册ray直到成功
   while true; do
       # 尝试连接 Ray 集群
-      ray start --address="$MASTER_ADDR:8377" --resources='{"NPU": '$NPUS_PER_NODE'}' --node-ip-address=$CURRENT_IP
+      ray start --address="$MASTER_ADDR:8260" --resources='{"NPU": '$NPUS_PER_NODE'}' --node-ip-address=$CURRENT_IP
 
       # 检查连接是否成功
       ray status

@@ -121,7 +121,7 @@ ACTOR_CONFIG=(
     +actor_rollout_ref.actor.megatron.override_transformer_config.sequence_parallel=True
     actor_rollout_ref.actor.megatron.param_offload=True
     actor_rollout_ref.actor.megatron.optimizer_offload=True
-    actor_rollout_ref.actor.grad_offload=True
+    actor_rollout_ref.actor.megatron.grad_offload=True
     +actor_rollout_ref.actor.optim.override_optimizer_config.optimizer_offload_fraction=1
     +actor_rollout_ref.actor.optim.override_optimizer_config.use_precision_aware_optimizer=True
     +actor_rollout_ref.actor.optim.override_optimizer_config.optimizer_cpu_offload=True
@@ -168,6 +168,8 @@ REF_CONFIG=(
 )
 
 ROLLOUT_CONFIG=(
+    actor_rollout_ref.rollout.name=vllm
+    actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1
     actor_rollout_ref.rollout.tensor_model_parallel_size=$gen_tp
     actor_rollout_ref.rollout.data_parallel_size=$gen_dp
     actor_rollout_ref.rollout.expert_parallel_size=$gen_ep
