@@ -22,7 +22,7 @@ max_response_length=$((1024 * 8))
 
 # Training Batch Configuration
 train_prompt_bsz=64
-train_prompt_mini_bsz=32
+train_prompt_mini_bsz=16
 n_resp_per_prompt=8
 
 # Algorithm Configuration
@@ -48,7 +48,7 @@ train_pp=8
 train_tp=2
 train_ep=64
 train_etp=1
-train_cp=4
+train_cp=2
 
 # Generation Configuration
 gen_tp=8
