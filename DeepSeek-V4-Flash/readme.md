@@ -38,7 +38,7 @@ cd /workspace-verl
 
 # 安装环境依赖
 git clone https://github.com/verl-project/verl-ascend-recipe.git
-bash verl-ascend-recipe/deepseekv4/scripts/install.sh
+bash verl-ascend-recipe/DeepSeek-V4-Flash/examples/install.sh
 
 # 创建软链接
 cd verl
@@ -66,7 +66,7 @@ ln -s ../mbridge/mbridge mbridge
 请根据实际数据/权重等路径修改ray_start.sh 以及 train_deepseek_v4_grpo_mindspeed_vllm.sh的中相应路径
 ```bash
 cd verl
-bash ../verl-ascend-recipe/deepseekv4/scripts/ray_start.sh
+bash ../verl-ascend-recipe/DeepSeek-V4-Flash/examples/ray_start.sh
 ```
 
 ### 训练效果
