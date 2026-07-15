@@ -231,7 +231,6 @@ ACTOR_CONFIG=(
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.moe_shared_expert_overlap=True
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.indexer_loss_coeff=0.0
 
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_triton_sfa=True
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_triton_sfa=False
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_triton_mhc=True
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_triton_sinkhorn=False
