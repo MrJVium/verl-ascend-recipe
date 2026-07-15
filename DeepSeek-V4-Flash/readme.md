@@ -36,6 +36,12 @@ docker exec -it rl_test bash
 mkdir /workspace-verl 
 cd /workspace-verl
 
+# 下载并安装新版cann环境
+./Ascend-cann-toolkit_9.1.0_linux-aarch64.run --install
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+./Ascend-cann-nnal_9.1.0_linux-aarch64.run --install
+./Ascend-cann-A3-ops_9.1.0_linux-aarch64.run --install
+
 # 安装环境依赖
 git clone https://github.com/verl-project/verl-ascend-recipe.git
 bash verl-ascend-recipe/DeepSeek-V4-Flash/examples/install.sh
