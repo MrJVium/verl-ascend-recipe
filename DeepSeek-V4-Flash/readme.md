@@ -75,6 +75,8 @@ cd verl
 bash ../verl-ascend-recipe/DeepSeek-V4-Flash/examples/ray_start.sh
 ```
 
+单机减层可参考[train_deepseek_v4_4layer_grpo_mindspeed_vllm_single_node.sh](examples/train_deepseek_v4_4layer_grpo_mindspeed_vllm_single_node.sh)
+
 ### 训练效果
 
 长跑250步训练效果曲线示例：
