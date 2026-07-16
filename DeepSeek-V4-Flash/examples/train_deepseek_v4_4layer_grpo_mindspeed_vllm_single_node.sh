@@ -1,28 +1,65 @@
 #!/bin/bash
+#set -xeuo pipefail
+
+#Envs
+ray stop --force
+rm -rf /tmp/ray
+rm -rf /root/.triton/cache/
+rm -rf /root/.triton/dump/
+rm -rf /tmp/torchinductor_root/*
+rm -rf /root/.cache/torch_extensions
+
+# vllm路径
+export PYTHONPATH="/workspace-verl/vllm:$PYTHONPATH"
+export PYTHONPATH="/workspace-verl/vllm-ascend:$PYTHONPATH"
+
+CANN_DIR=/usr/local/Ascend
+source $CANN_DIR/ascend-toolkit/set_env.sh
+source $CANN_DIR/nnal/atb/set_env.sh
+
+# 关闭训练图模式，待修复训练走入图模式
+export TORCHDYNAMO_VERBOSE=1
+export TORCH_COMPILE_DEBUG=1
+export TORCHDYNAMO_DISABLE=1
+
+export PYTORCH_NPU_ALLOC_CONF="max_split_size_mb:2048"
+
+export HCCL_CONNECT_TIMEOUT=1500
+export CUDA_DEVICE_MAX_CONNECTIONS=1
+export HCCL_SOCKET_IFNAME=enp23s0f3
+export GLOO_SOCKET_IFNAME=enp23s0f3
+
+export VLLM_USE_V1=1
+export HCCL_BUFFSIZE=500
+export VLLM_VERSION=0.23.0
+export HCCL_OP_EXPANSION_MODE="AIV" 
+
 # Project Configuration
-project_name='DeepSeek-V4-Flash'
-exp_name='DeepSeek-V4-Flash-8-nodes'
+project_name='DeepSeek-V4-Flash-4layer'
+exp_name='DeepSeek-V4-Flash-4layer-single-node'
 
 # Node Info
-NNODES=${NNODES:-8}
+NNODES=${NNODES:-1}
 NPUS_PER_NODE=${NPUS_PER_NODE:-16}
 
 # Model Weights Paths
-MODEL_PATH=/model/DeepSeek-V4-Flash-Base-BF16
+MODEL_PATH=/model/DeepSeek-V4-Flash-BF16-4layer
 RAY_DATA_HOME=${RAY_DATA_HOME:-"${HOME}/verl"}
-CKPTS_DIR=/ckpt
+
+ray start --head
 
 # File System Paths
 TRAIN_FILE=/data/math-17k/dapo-math-17k.parquet
 TEST_FILE=/data/math-17k/dapo-math-17k.parquet
+
 # Data Length Configuration
 max_prompt_length=$((1024 * 2))
-max_response_length=$((1024 * 6))
+max_response_length=$((1024 * 2))
 
 # Training Batch Configuration
-train_prompt_bsz=64
-train_prompt_mini_bsz=64
-n_resp_per_prompt=8
+train_prompt_bsz=32
+train_prompt_mini_bsz=32
+n_resp_per_prompt=16
 
 # Algorithm Configuration
 adv_estimator=grpo
@@ -39,71 +76,91 @@ infer_ppo_max_token_len=$(((max_prompt_length + max_response_length)))
 
 # Megatron Parallelism Configuration
 train_tp=4
-train_ep=64
+train_ep=8
 train_etp=1
 train_pp=2
 train_cp=1
 
 # Generation Configuration
-gen_tp=8
-gen_dp=8
-gen_ep=64
+gen_tp=1
+gen_dp=16
+gen_ep=16
 gpu_memory_utilization=0.5
 max_model_len=$((max_prompt_length + max_response_length))
 max_num_batched_tokens=$(((max_prompt_length + max_response_length) * 1))
 
+num_layers=4
+
+# Data Configuration
 DATA_CONFIG=(
+    # File Paths
     data.train_files="${TRAIN_FILE}"
     data.val_files="${TEST_FILE}"
+    # Data Structure
     data.prompt_key=prompt
+    # Batch and Length Configuration
     data.train_batch_size=${train_prompt_bsz}
     data.max_prompt_length=${max_prompt_length}
     data.max_response_length=${max_response_length}
+    # Preprocessing
     data.filter_overlong_prompts=False
     data.truncation='left'
 )
 
+# Model Configuration
 MODEL_CONFIG=(
+    # Model Path
     actor_rollout_ref.model.path="${MODEL_PATH}"
+    # Model Processing
     actor_rollout_ref.model.use_remove_padding=False
     actor_rollout_ref.model.mtp.enable_train=False
     actor_rollout_ref.model.mtp.enable=False
     actor_rollout_ref.actor.mindspeed.use_remove_padding=False
 )
 
+# Reinforcement Learning Algorithm Configuration
 ALGORITHM_CONFIG=(
+    # Advantage Estimation
     algorithm.adv_estimator=${adv_estimator}
+    # KL Divergence Control
     algorithm.use_kl_in_reward=${use_kl_in_reward}
     algorithm.kl_ctrl.kl_coef=${kl_coef}
 )
 
 ACTOR_CONFIG=(
+    # Core Runtime Settings
     actor_rollout_ref.actor.use_torch_compile=False
     actor_rollout_ref.actor.use_dynamic_bsz=${use_dynamic_bsz}
+    # Loss Function Configuration
     actor_rollout_ref.actor.use_kl_loss=${use_kl_loss}
     actor_rollout_ref.actor.kl_loss_coef=${kl_loss_coef}
     actor_rollout_ref.actor.entropy_coeff=0
+    # PPO Training Parameters
     actor_rollout_ref.actor.ppo_epochs=1
     actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1
     actor_rollout_ref.actor.ppo_max_token_len_per_gpu=${actor_ppo_max_token_len}
     actor_rollout_ref.actor.ppo_mini_batch_size=${train_prompt_mini_bsz}
-    actor_rollout_ref.actor.optim.lr=1e-6
+    # Optimizer Settings
+    actor_rollout_ref.actor.optim.lr=0.00001
+    # Megatron Parallelism Strategy
     actor_rollout_ref.actor.mindspeed.tensor_model_parallel_size=${train_tp}
     actor_rollout_ref.actor.mindspeed.pipeline_model_parallel_size=${train_pp}
     actor_rollout_ref.actor.mindspeed.context_parallel_size=${train_cp}
     actor_rollout_ref.actor.mindspeed.expert_model_parallel_size=${train_ep}
     actor_rollout_ref.actor.mindspeed.expert_tensor_parallel_size=${train_etp}
+    # Memory Optimization
     actor_rollout_ref.actor.mindspeed.param_offload=${all_offload}
     actor_rollout_ref.actor.mindspeed.optimizer_offload=False
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.swap_optimizer=True
     actor_rollout_ref.actor.mindspeed.grad_offload=${all_offload}
+    # Model Weights Management
     actor_rollout_ref.actor.mindspeed.use_dist_checkpointing=False
     actor_rollout_ref.actor.mindspeed.use_mbridge=True
+    # Mcore Model Settings
+    # +actor_rollout_ref.actor.optim.override_optimizer_config.optimizer_cpu_offload=True
+    # +actor_rollout_ref.actor.optim.override_optimizer_config.use_precision_aware_optimizer=True
+	# +actor_rollout_ref.actor.optim.override_optimizer_config.optimizer_offload_fraction=1
 
-    +actor_rollout_ref.actor.optim.override_optimizer_config.optimizer_cpu_offload=True
-    +actor_rollout_ref.actor.optim.override_optimizer_config.use_precision_aware_optimizer=True
-	+actor_rollout_ref.actor.optim.override_optimizer_config.optimizer_offload_fraction=1
-
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.swap_optimizer=False
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.enable_dsa_indexer=True
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.index_n_heads=64
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.index_head_dim=128
@@ -112,6 +169,12 @@ ACTOR_CONFIG=(
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.enable_mhc=True
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.kv_compress=True
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.norm_eps=1e-6
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_triton_sinkhorn=True
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_triton_mhc=True
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_triton_rmsnorm_without_weight=False
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_fused_lightning_indexer=False
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_fused_lightning_indexer_loss=False
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_sparse_flash_attn=True
 
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.multi_latent_attention=True
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.qk_pos_emb_head_dim=64
@@ -131,7 +194,9 @@ ACTOR_CONFIG=(
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.rope_factor=16
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.compress_rope_theta=160000.0
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.max_batch_size=4
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.compress_ratios="[0,0,4,128,4,128,4,128,4,128,4,128,4,128,4,128,4,128,4,128,4,128,4,128,4,128,4,128,4,128,4,128,4,128,4,128,4,128,4,128,4,128,4]"
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.compress_ratios="[0, 0, 4, 128]"
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_g2_indexer_loss=False
+
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.moe_grouped_gemm=False  
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.moe_permutation_async_comm=True 
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.moe_token_dispatcher_type=alltoall 
@@ -145,23 +210,26 @@ ACTOR_CONFIG=(
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.moe_router_num_groups=1
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.moe_router_topk_scaling_factor=1.5
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.seq_aux=False
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.moe_aux_loss_coeff=0.0
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.moe_aux_loss_coeff=0
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.moe_router_score_function=sqrtsoftplus
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.moe_router_enable_expert_bias=True 
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.moe_shared_expert_intermediate_size=2048
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.fix_router=False  
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.moe_router_dtype=fp32
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.n_hash_layers=3
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.moe_permute_fusion=True
 
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.mtp_num_layers=0
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.mtp_loss_scaling_factor=0.3 
+
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.mtp_mem_efficient_logits=True  
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.recompute_granularity=full  
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.recompute_method=uniform  
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.recompute_num_layers=1  
+
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.beta_fast=32  
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.beta_slow=1  
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.rope_scaling_factor=16  
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.rope_scaling_factor=16 
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.rope_scaling_mscale=1.0  
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.rope_scaling_mscale_all_dim=1.0
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.rope_scaling_original_max_position_embeddings=65536
@@ -177,8 +245,8 @@ ACTOR_CONFIG=(
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_flash_attn=True 
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_mcore_models=True   
 
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.num_layers=43
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.num_layer_list=\'21,22\'
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.num_layers=$num_layers
+    #+actor_rollout_ref.actor.mindspeed.llm_kwargs.num_layer_list=\'21,22\'
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.hidden_size=4096
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.ffn_hidden_size=4096
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.num_attention_heads=64
@@ -189,7 +257,7 @@ ACTOR_CONFIG=(
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.micro_batch_size=1
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.global_batch_size=128
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.make_vocab_size_divisible_by=1
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.lr=1e-6
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.lr=0
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.train_iters=2000
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.lr_decay_style=constant
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.untie_embeddings_and_output_weights=True
@@ -205,10 +273,10 @@ ACTOR_CONFIG=(
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_fused_swiglu=True
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_fused_rmsnorm=True
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.swiglu=True
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.swiglu_limit=10.0
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.swiglu_limit=0
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.no_masked_softmax_fusion=True
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.attention_softmax_in_fp32=True
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.min_lr=1e-6
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.min_lr=0
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.weight_decay=1e-2
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.clip_grad=1.0
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.adam_beta1=0.9
@@ -226,72 +294,81 @@ ACTOR_CONFIG=(
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.gradient_accumulation_fusion=False
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.no_save_optim=True
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.no_save_rng=True
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.context_parallel_algo=ulysses_cp_algo
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.context_parallel_algo=kvallgather_cp_algo
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.masked_softmax_fusion=False
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.moe_shared_expert_overlap=True
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.indexer_loss_coeff=0.0
 
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_triton_sfa=False
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_triton_mhc=True
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_triton_sinkhorn=False
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_triton_rmsnorm_without_weight=False
     +actor_rollout_ref.actor.mindspeed.llm_kwargs.no_pad_to_seq_lengths=True
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_fused_lightning_indexer=False
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_fused_lightning_indexer_loss=False
-    +actor_rollout_ref.actor.mindspeed.llm_kwargs.use_sparse_flash_attn=True
+    +actor_rollout_ref.actor.mindspeed.llm_kwargs.moe_router_bias_update_rate=0.0
 )
 
 REF_CONFIG=(
+    # Core Runtime Settings
     actor_rollout_ref.ref.use_torch_compile=False
+    # Log Probability Inference
     actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1
     actor_rollout_ref.ref.log_prob_use_dynamic_bsz=${use_dynamic_bsz}
     actor_rollout_ref.ref.log_prob_max_token_len_per_gpu=${infer_ppo_max_token_len}
+    # Megatron Parallelism Strategy
     actor_rollout_ref.ref.mindspeed.tensor_model_parallel_size=${train_tp}
     actor_rollout_ref.ref.mindspeed.pipeline_model_parallel_size=${train_pp}
     actor_rollout_ref.ref.mindspeed.context_parallel_size=${train_cp}
     actor_rollout_ref.ref.mindspeed.expert_model_parallel_size=${train_ep}
     actor_rollout_ref.ref.mindspeed.expert_tensor_parallel_size=${train_etp}
+    # Memory Optimization
     actor_rollout_ref.ref.mindspeed.param_offload=${all_offload}
+    # Model Weights Management
     actor_rollout_ref.ref.mindspeed.use_dist_checkpointing=False
     actor_rollout_ref.ref.mindspeed.use_mbridge=True
 )
 
 ROLLOUT_CONFIG=(
-    actor_rollout_ref.rollout.max_num_seqs=32
-    +actor_rollout_ref.rollout.engine_kwargs.vllm.compilation_config.cudagraph_mode='FULL_DECODE_ONLY'
-    +actor_rollout_ref.rollout.engine_kwargs.vllm.compilation_config.cudagraph_capture_sizes="[2, 4, 8, 16, 32]"
-    actor_rollout_ref.rollout.max_model_len=${max_model_len}
     actor_rollout_ref.rollout.calculate_log_probs=True
     actor_rollout_ref.rollout.name=vllm
     actor_rollout_ref.rollout.load_format="safetensors"
+    # Generation Parameters
     actor_rollout_ref.rollout.n=${n_resp_per_prompt}
     actor_rollout_ref.rollout.top_p=1.0
     actor_rollout_ref.rollout.top_k=-1
     actor_rollout_ref.rollout.temperature=1.0
+    # Log Probability Inference
     actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1
     actor_rollout_ref.rollout.log_prob_use_dynamic_bsz=${use_dynamic_bsz}
     actor_rollout_ref.rollout.log_prob_max_token_len_per_gpu=${infer_ppo_max_token_len}
+    # Memory Management
     actor_rollout_ref.rollout.gpu_memory_utilization=${gpu_memory_utilization}
+    # Parallelism Strategy
     actor_rollout_ref.rollout.tensor_model_parallel_size=${gen_tp}
     actor_rollout_ref.rollout.data_parallel_size=${gen_dp}
     actor_rollout_ref.rollout.expert_parallel_size=${gen_ep}
+    actor_rollout_ref.rollout.enable_prefix_caching=False
+    actor_rollout_ref.rollout.enable_chunked_prefill=False
+    # Performance Optimization
+    +actor_rollout_ref.rollout.engine_kwargs.vllm.compilation_config.cudagraph_mode='FULL_DECODE_ONLY'
     actor_rollout_ref.rollout.enforce_eager=False
     actor_rollout_ref.rollout.free_cache_engine=True
+    actor_rollout_ref.rollout.max_num_seqs=64
 )
 
 TRAINER_CONFIG=(
+    # Logger Configuration
     trainer.logger='["console"]'
+    # Project Settings
     trainer.project_name="${project_name}"
     trainer.experiment_name="${exp_name}"
+    # Hardware Configuration
     trainer.nnodes="${NNODES}"
     trainer.n_gpus_per_node="${NPUS_PER_NODE}"
     trainer.device='npu'
+    # Training Schedule
     trainer.total_epochs=15
     trainer.val_before_train=False
     trainer.test_freq=-1
-    trainer.save_freq=20
+    trainer.save_freq=-1
+    # Checkpoint Directory
     trainer.default_local_dir="${CKPTS_DIR}"
-    trainer.use_legacy_worker_impl=disable
+    trainer.use_legacy_worker_impl=disable 
 )
 
 
@@ -305,4 +382,4 @@ PYTHONUNBUFFERED=1 python3 -m verl.trainer.main_ppo \
     "${ROLLOUT_CONFIG[@]}" \
     "${ALGORITHM_CONFIG[@]}" \
     "${TRAINER_CONFIG[@]}" \
-    "$@" | tee logs/run_deepseek_v4_npu_$(date +%Y%m%d_%H%M%S).log
+    "$@" 2>&1 | tee logs/run_deepseek_v4_4layer_npu_$(date +%Y%m%d_%H%M%S).log

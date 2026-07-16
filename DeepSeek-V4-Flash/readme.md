@@ -36,9 +36,15 @@ docker exec -it rl_test bash
 mkdir /workspace-verl 
 cd /workspace-verl
 
+# 下载并安装新版cann环境
+./Ascend-cann-toolkit_9.1.0_linux-aarch64.run --install
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+./Ascend-cann-nnal_9.1.0_linux-aarch64.run --install
+./Ascend-cann-A3-ops_9.1.0_linux-aarch64.run --install
+
 # 安装环境依赖
 git clone https://github.com/verl-project/verl-ascend-recipe.git
-bash verl-ascend-recipe/deepseekv4/scripts/install.sh
+bash verl-ascend-recipe/DeepSeek-V4-Flash/examples/install.sh
 
 # 创建软链接
 cd verl
@@ -66,8 +72,10 @@ ln -s ../mbridge/mbridge mbridge
 请根据实际数据/权重等路径修改ray_start.sh 以及 train_deepseek_v4_grpo_mindspeed_vllm.sh的中相应路径
 ```bash
 cd verl
-bash ../verl-ascend-recipe/deepseekv4/scripts/ray_start.sh
+bash ../verl-ascend-recipe/DeepSeek-V4-Flash/examples/ray_start.sh
 ```
+
+单机减层可参考[train_deepseek_v4_4layer_grpo_mindspeed_vllm_single_node.sh](examples/train_deepseek_v4_4layer_grpo_mindspeed_vllm_single_node.sh)
 
 ### 训练效果
 

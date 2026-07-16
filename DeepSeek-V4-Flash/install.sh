@@ -47,6 +47,10 @@ cp pretrain_deepseek4.py mindspeed_llm
 pip3 install -r requirements.txt
 cd ..
 
+echo "6.update triton-ascend && transformers"
+pip install triton-ascend==3.2.1 --extra-index-url https://triton-ascend.osinfra.cn/pypi/simple/ --trusted-host triton-ascend.osinfra.cn
+pip install transformers==5.8.1
+
 echo "7.apply patch"
 cd Megatron-LM
 git apply --whitespace=nowarn ../verl-ascend-recipe/DeepSeek-V4-Flash/patch/megatron.patch && cd ..
