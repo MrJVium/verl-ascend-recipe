@@ -11,12 +11,15 @@ set -xeuo pipefail
 # The data directory must contain train.parquet and test.parquet.
 data_path=""
 model_path=""
+extra_args=()
 
 for para in "$@"; do
     if [[ $para == --data_path=* ]]; then
         data_path="${para#*=}"
     elif [[ $para == --model_path=* ]]; then
         model_path="${para#*=}"
+    else
+        extra_args+=("$para")
     fi
 done
 
@@ -196,4 +199,5 @@ python3 -m verl.trainer.main_ppo \
     trainer.log_val_generations=16 \
     trainer.max_actor_ckpt_to_keep=10 \
     trainer.resume_mode=auto \
-    critic.enable=False
+    critic.enable=False \
+    "${extra_args[@]}"
