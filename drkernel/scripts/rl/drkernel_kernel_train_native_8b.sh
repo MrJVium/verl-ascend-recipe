@@ -9,9 +9,14 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
 export PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}"
 
 # ---------- Start KernelGYM reward server ----------
-# Server lives in-repo at recipe/drkernel/kernelgym_server/. Override KERNELGYM_DIR to use
-# a separate checkout.
-KERNELGYM_DIR="${KERNELGYM_DIR:-${REPO_ROOT}/recipe/drkernel/kernelgym_server}"
+# Patched KernelGYM checkout created by recipe/drkernel/kernelgym_npu/setup_kernelgym.sh.
+# Override KERNELGYM_DIR to use a checkout elsewhere.
+KERNELGYM_DIR="${KERNELGYM_DIR:-${REPO_ROOT}/recipe/drkernel/kernelgym_npu/KernelGYM}"
+if [ ! -d "${KERNELGYM_DIR}" ]; then
+    echo "KernelGYM checkout not found at ${KERNELGYM_DIR}." >&2
+    echo "Run: bash ${REPO_ROOT}/recipe/drkernel/kernelgym_npu/setup_kernelgym.sh" >&2
+    exit 1
+fi
 cd "${KERNELGYM_DIR}"
 mkdir -p logs && cd logs && rm -rf * && cd ..
 bash start_all_with_monitor.sh

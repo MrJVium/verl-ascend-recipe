@@ -151,12 +151,18 @@ pip install -v -e .
 
 ## 6. Install the KernelGYM reward server
 
-The DR.Kernel reward server ships in-repo at `recipe/drkernel/kernelgym_server/`.
-Install its dependencies (python deps + Redis) from the repo root:
+The DR.Kernel reward server is upstream
+[hkust-nlp/KernelGYM](https://github.com/hkust-nlp/KernelGYM) with our NPU
+adaptation applied on top. The recipe ships only that adaptation — a patch plus
+new NPU toolkits — in `recipe/drkernel/kernelgym_npu/`. Set it up from the repo
+root:
 
 ```bash
-cd recipe/drkernel/kernelgym_server && bash setup.sh && cd ../../..
+cd recipe/drkernel/kernelgym_npu
+bash setup_kernelgym.sh                 # clone upstream KernelGYM (pinned commit), apply patch + overlay
+cd KernelGYM && bash setup.sh           # install python deps + Redis
+cd ../../../..
 ```
 
-See [`recipe/drkernel/kernelgym_server/README.md`](kernelgym_server/README.md) for
-deployment details.
+See [`recipe/drkernel/kernelgym_npu/README.md`](kernelgym_npu/README.md) for what
+the patch/overlay contain and for deployment details.

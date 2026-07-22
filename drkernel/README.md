@@ -4,8 +4,9 @@ This recipe ports **DR.Kernel** ([arXiv:2602.05885](https://arxiv.org/abs/2602.0
 **verl** and runs it on **Ascend NPU**.
 
 - **Entry point:** `recipe/drkernel/main.py` (`python -m recipe.drkernel.main`)
-- **Reward server:** `recipe/drkernel/kernelgym_server/` — a NPU-distributed
-  kernel evaluation service. See its own [README](kernelgym_server/README.md).
+- **Reward server:** upstream [KernelGYM](https://github.com/hkust-nlp/KernelGYM)
+  patched for NPU — the recipe ships only the adaptation (patch + new toolkits) in
+  `recipe/drkernel/kernelgym_npu/`. See its own [README](kernelgym_npu/README.md).
 - **Advantage estimator:** TRLOO (Turn-level REINFORCE Leave-One-Out) ships with the
   recipe in [`algos.py`](algos.py) and self-registers as `algorithm.adv_estimator=trloo`.
 
@@ -53,7 +54,8 @@ feedback. Use it as the worked example below.
 - **Datasets** — train/val parquet files at `TRAIN_FILES` / `VAL_FILES`.
 - **KernelGYM server reachable** at `KERNELGYM_SERVER_URL`
   (default `http://127.0.0.1:8002`). Point it at the host/port where
-  `recipe/drkernel/kernelgym_server` is serving — e.g. a remote node's IP for a multi-node setup.
+  the patched KernelGYM checkout (`recipe/drkernel/kernelgym_npu/KernelGYM`, created
+  by `setup_kernelgym.sh`) is serving — e.g. a remote node's IP for a multi-node setup.
 - **NPUs** — the 30B script defaults to `N_GPUS_ROLLOUT=12` rollout +
   `N_GPUS_TRAINING=12` training NPUs, plus the cards the KernelGYM server needs;
   size `NNODES` to your cluster. (The 8B script defaults to 10 rollout + 16 training + 6 KernelGYM.)
@@ -71,7 +73,8 @@ the KernelGYM it spawns lands on cards 8–15 instead of inheriting cards 0–7.
    ray start --head --port=6379          # add `ray start --address=<head-ip>:6379` on other nodes
    ```
 
-2. **Edit `recipe/drkernel/kernelgym_server/.env`** (copy from `.env.example`):
+2. **Edit `recipe/drkernel/kernelgym_npu/KernelGYM/.env`** (copy from `.env.example`;
+   the checkout is created by `setup_kernelgym.sh`, see [INSTALL.md](INSTALL.md)):
    ```ini
    API_HOST=<head-node IP>               # 127.0.0.1 for single-node
    GPU_DEVICES=[8,9,10,11,12,13,14,15]   # the last 8 cards
