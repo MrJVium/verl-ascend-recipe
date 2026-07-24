@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 # ruff: noqa: E501  -- long line is inside an embedded Triton kernel-code fixture string
 import asyncio
 

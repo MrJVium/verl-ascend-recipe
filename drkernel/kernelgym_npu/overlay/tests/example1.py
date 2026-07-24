@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 import asyncio
 
 import httpx

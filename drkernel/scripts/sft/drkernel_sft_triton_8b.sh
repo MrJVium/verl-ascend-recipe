@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
 # DR.Kernel SFT (multi-turn) launcher — cold-start on Triton trajectories.
 #
 # Mirrors the original DR.Kernel SFT recipe (qwen3-8b-base coldstart) but

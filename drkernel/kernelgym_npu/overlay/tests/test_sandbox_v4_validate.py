@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 """Standalone AST unit test for the sandbox_v4 decoy validator.
 
 Torch-free: it imports only the two ``validate_triton_impl`` modules (pure

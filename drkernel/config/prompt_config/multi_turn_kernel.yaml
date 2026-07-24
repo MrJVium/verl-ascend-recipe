@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 # Per-turn prompt config for the kernel-RL multi-turn agent loop.
 #
 # Ported from `drkernel/KernelGYM/drkernel/kernel/config/prompt_config/multi_turn_kernel.yaml`.

@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
 # DR.Kernel kernel-RL training launcher — DR.Kernel-NATIVE reward path.
 #
 # Wiring (matches upstream DR.Kernel layout):

@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
 # DR.Kernel kernel-RL standalone validation launcher.
 #
 # Runs DrKernelFullyAsyncRollouter.do_validate() once against a merged HF

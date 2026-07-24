@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 """DR.Kernel-style multi-turn agent loop on top of verl's `AgentLoopBase`.
 
 Behavior (per assistant turn):

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
 """Triton 实现退化检测脚本 — 通过 AST 静态分析检查生成代码是否退化为 PyTorch 原生实现。
 
 检测三种退化类型：

@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 """KernelGym caller for the rollout-side multi-turn agent loop.
 
 Why not reuse `recipe.drkernel.rewards.reward_client.KernelRewardClient`?

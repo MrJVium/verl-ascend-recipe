@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 """Per-turn prompt template engine — minimal port of DR.Kernel's design.
 
 DR.Kernel's `multi_turn_kernel.yaml` describes how the user-facing

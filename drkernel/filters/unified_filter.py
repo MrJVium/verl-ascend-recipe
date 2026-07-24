@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
 """
 Unified batch filter for PPO training.
 

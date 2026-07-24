@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 """AscendOptGenAgent evaluation pipeline (multi-shape correctness + timing).
 
 This is the methodology adapter that swaps in the comparison logic from

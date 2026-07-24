@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 """sandbox_v3 evaluation toolkit.
 
 Vendored from the ``Triton-Training-kernelgym-sandbox`` KernelBench toolkit and

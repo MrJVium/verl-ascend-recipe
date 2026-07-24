@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 # Kernel-RL reward managers — DR.Kernel-native pattern.
 #
 # `AsyncKernelRewardManager` (in `kernel_async.py`) is DR.Kernel's

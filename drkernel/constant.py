@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 # ruff: noqa: E501  -- long lines live inside the embedded Qwen3 chat template literal below
 QWEN3CHATTEMPLATE = """
 {% macro render_extra_keys(json_dict, handled_keys) %}

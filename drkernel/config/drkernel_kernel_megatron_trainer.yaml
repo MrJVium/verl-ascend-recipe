@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 # DR.Kernel kernel-RL trainer config — Megatron variant.
 #
 # Sibling of `drkernel_kernel_trainer_native.yaml` (which chains through

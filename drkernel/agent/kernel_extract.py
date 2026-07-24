@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 """Code-block extraction for the DR.Kernel multi-turn agent loop.
 
 Patterns lifted verbatim from

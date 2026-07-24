@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
 # Set up the KernelGYM reward server with Ascend NPU support.
 #
 # Clones upstream hkust-nlp/KernelGYM at the pinned commit, applies the NPU

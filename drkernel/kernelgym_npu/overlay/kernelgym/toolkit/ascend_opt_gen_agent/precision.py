@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 """Precision-comparison primitives for the AscendOptGenAgent methodology.
 
 This is a faithful port of the comparison logic in

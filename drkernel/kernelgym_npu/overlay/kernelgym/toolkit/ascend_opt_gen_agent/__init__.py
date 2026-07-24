@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 """AscendOptGenAgent evaluation toolkit.
 
 Ported from ``eval_AscendOptGenAgent_original/verify.py``. Provides

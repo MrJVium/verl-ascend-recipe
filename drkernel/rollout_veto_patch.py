@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 """DR.Kernel actor-side runtime patches.
 
 Two independent patches live here:

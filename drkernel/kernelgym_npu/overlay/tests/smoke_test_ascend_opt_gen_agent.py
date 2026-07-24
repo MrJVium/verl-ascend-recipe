@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 """Smoke test for the AscendOptGenAgent toolkit.
 
 Exercises four scenarios against the live KernelGym server, each with

@@ -1,3 +1,4 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
 # Copyright 2025 Bytedance Ltd. and/or its affiliates
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

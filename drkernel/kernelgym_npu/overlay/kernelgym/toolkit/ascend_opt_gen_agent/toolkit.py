@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 """Toolkit adapter for the AscendOptGenAgent evaluation methodology.
 
 Plugs the AscendOptGenAgent pipeline (multi-shape verify.py-style

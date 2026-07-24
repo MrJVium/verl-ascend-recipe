@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
 
 set -x
 set -eo pipefail

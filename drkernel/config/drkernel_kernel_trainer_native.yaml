@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 # DR.Kernel-NATIVE kernel-RL trainer config.
 #
 # Mirrors DR.Kernel's `kernel/config/kernel_trainer.yaml` pattern: a custom

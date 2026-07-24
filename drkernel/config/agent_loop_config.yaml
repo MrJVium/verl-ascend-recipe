@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 # Agent-loop registry entries for the DR.Kernel multi-turn loop.
 #
 # Loaded by `verl.experimental.agent_loop.agent_loop.AgentLoopWorker.__init__`

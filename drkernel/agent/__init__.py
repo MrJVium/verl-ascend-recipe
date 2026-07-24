@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 # DR.Kernel-style multi-turn agent loop for verl.
 #
 # Implements DR.Kernel's prompt-template multi-turn behavior on top of

@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 """KernelBench model loading helpers (toolkit layer)."""
 
 from __future__ import annotations

@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 # DR.Kernel-flavored fully-async PPO trainer config.
 #
 # Extends `fully_async_ppo_trainer.yaml` (from verl/experimental/fully_async_policy/config/)

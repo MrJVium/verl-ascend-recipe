@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 """Pure reward-summary computation, factored for the rollout-side agent loop.
 
 The methods here mirror what `recipe.drkernel.rewards.reward_client.KernelRewardClient`

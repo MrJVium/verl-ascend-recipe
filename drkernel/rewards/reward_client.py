@@ -1,3 +1,5 @@
+# Copyright (c) 2026, HUAWEI CORPORATION. All rights reserved.
+
 """
 Hybrid Kernel reward client (composed implementation):
 - External API matches KernelServer (/evaluate submit, /status poll, /results fetch).
