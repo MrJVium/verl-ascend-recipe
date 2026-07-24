@@ -32,7 +32,6 @@ import traceback
 from typing import Any, Optional
 
 import torch
-
 from kernelgym.toolkit.ascend_opt_gen_agent import precision
 from kernelgym.toolkit.kernelbench.exec_types import (
     KernelExecResult,

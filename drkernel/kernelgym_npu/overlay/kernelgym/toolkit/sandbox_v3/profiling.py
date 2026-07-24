@@ -10,7 +10,6 @@ from contextlib import contextmanager
 from typing import Any, Optional
 
 import torch
-
 from kernelgym.config import settings
 
 logger = logging.getLogger("kernelgym.toolkit.kernelbench.profiling")

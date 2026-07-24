@@ -6,7 +6,6 @@ from typing import Any
 
 import torch
 import torch.nn as nn
-
 from kernelgym.toolkit.kernelbench.exec_types import (
     KernelExecResult,
     get_error_name,

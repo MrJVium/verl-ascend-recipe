@@ -2,7 +2,7 @@
 
 Two independent patches live here:
 
-1. **Qwen3-MoE all-experts loop** (``apply_qwen3_moe_checkpoint_patch``). 
+1. **Qwen3-MoE all-experts loop** (``apply_qwen3_moe_checkpoint_patch``).
 
 2. **MRS per-token catastrophic-ratio veto** (``compute_policy_loss_bypass_mode_with_veto``).
    A tiny extension of verl's ``rollout_correction`` subsystem: any sequence
@@ -118,9 +118,7 @@ def _apply_token_veto(
     response_mask: torch.Tensor,
     rollout_token_veto_threshold: float,
 ) -> tuple[torch.Tensor, dict[str, float]]:
-    """Zero the full row of any sequence with a catastrophic-ratio token.
-
-    """
+    """Zero the full row of any sequence with a catastrophic-ratio token."""
     log_ratio = old_log_prob - rollout_log_prob
     log_veto_threshold = math.log(rollout_token_veto_threshold)
     catastrophic_tokens = (log_ratio < log_veto_threshold) & response_mask.bool()
@@ -135,9 +133,7 @@ def _apply_token_veto(
 
 
 def _read_veto_threshold(config) -> Optional[float]:
-    """Pull ``rollout_token_veto_threshold`` out of the rollout_correction config.
-
-    """
+    """Pull ``rollout_token_veto_threshold`` out of the rollout_correction config."""
     if config is None or not hasattr(config, "policy_loss"):
         return None
     rollout_corr_config = config.policy_loss.get("rollout_correction", None)
