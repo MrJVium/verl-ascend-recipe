@@ -44,7 +44,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 # 安装环境依赖
 git clone https://github.com/verl-project/verl-ascend-recipe.git
-bash verl-ascend-recipe/DeepSeek-V4-Flash/examples/install.sh
+bash verl-ascend-recipe/DeepSeek-V4-Flash/install.sh
 
 # 创建软链接
 cd verl
